@@ -1,31 +1,72 @@
 import React from 'react';
-import axios from 'axios';
-class App extends React.Component {
+import User from './components/User';
+import FollowerList from './components/FollowerList';
+import axios from 'axios'
 
-state = {
-  avatar: "",
-  name: '',
-  followers: '',
-}
+class App extends React.Component {
+  state = {
+    currentUser: "Cassius-Cassity",
+    user:{},
+    followers: []
+  }
 
 componentDidMount(){
-  axios.get('https://api.github.com/users/Cassius-Cassity')
+  axios.get(`https://api.github.com/users/${this.state.currentUser}`)
   .then(resp => {
     this.setState({
       ...this.state,
-      avatar: resp.data.avatar_url,
-      name: resp.data.name,
-      followers: resp.data.followers
-    })
+      user: resp.data
+    });
   })
 }
+
+componentDidUpdate (prevProps, prevState){
+  if(this.state.user !== prevState.user){
+    axios.get(`https://api.github.com/users/${this.state.currentUser}/followers`)
+    .then(resp => {
+    this.setState({
+      ...this.state,
+      followers: resp.data
+    });
+  })
+}
+}
+
+handleChange = (event) => {
+  this.setState({
+    ...this.state,
+    currentUser: event.target.value
+  })
+}
+
+handleSubmit = (event) => {
+  event.preventDefault();
+  axios.get(`https://api.github.com/users/${this.state.currentUser}`)
+  .then(resp => {
+    this.setState({
+      ...this.state,
+      user: resp.data
+    });
+  });
+}
   render() {
-    return(<div>
-      <h1>Github Card</h1>
-      <h3>Name: {this.state.name}</h3>
-      <img src={this.state.avatar}/>
-      <p>followers: {this.state.followers}</p>
-    </div>);
+    return(
+    <div>
+      <div className='user-card'>
+        <h1>Github Info</h1>
+          <form onSubmit={this.handleSubmit}>
+            <input onChange={this.handleChange} placeholder='Github Handle'type='text'/>
+            <button>Search</button>
+          </form>
+          <User user={this.state.user}/>
+          <FollowerList followers={this.state.followers}/>
+      </div>
+
+      <div className="followers">
+
+      </div>
+    </div>
+    );
   }
 }
 
